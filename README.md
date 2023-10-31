@@ -5,7 +5,7 @@
   <p align="center">
     A GNOME Shell 45 Extension
     <br/>
-    (fork of [AninoDock](https://github.com/icedman/anino-dock) with Gnome Shell 45 support)
+    <i>(fork of <a href="https://github.com/icedman/anino-dock">AninoDock</a> with Gnome Shell 45 support)</i>
     <br/>
   </p>
 </p>
