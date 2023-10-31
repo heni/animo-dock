@@ -89,4 +89,4 @@ chmod +x {EXTENSION_PATH}/apps/empty-trash.sh
 
 ## License
 
-Distributed under the GPL 3.0 License. See [LICENSE](https://github.com/heni/animo-dock/blob/main/LICENSE.md) for more information.
+Distributed under the GPL 3.0 License. See [LICENSE](https://github.com/heni/animo-dock/blob/main/LICENSE) for more information.
