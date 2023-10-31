@@ -38,7 +38,7 @@ prefKeys.setKeys({
 Gtk.init();
 
 let app = new Gtk.Application({
-  application_id: 'com.anino-dock.legacy.GtkApplication',
+  application_id: 'com.animo-dock.legacy.GtkApplication',
 });
 
 app.connect('activate', (me) => {

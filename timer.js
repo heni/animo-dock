@@ -1,8 +1,9 @@
 'use strict';
 
-const { GLib } = imports.gi;
+import GLib from 'gi://GLib';
+import {print} from './diagnostics.js'
 
-var Timer = class {
+export default class Timer {
   constructor(name) {
     this._name = name;
     this._subscribers = [];
@@ -271,7 +272,6 @@ var Timer = class {
 
   runDebounced(func, delay, name) {
     if (typeof func === 'object') {
-      func._time = 0;
       return this.subscribe(func);
     }
     let obj = {
@@ -284,6 +284,7 @@ var Timer = class {
         s._time += dt;
         if (s._time >= s._delay) {
           s._func(s);
+          s._time = 0;
           this.unsubscribe(s);
         }
       },

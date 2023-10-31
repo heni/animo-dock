@@ -126,7 +126,7 @@ function set_color_rgba(ctx, red, green, blue, alpha) {
   ctx.setSourceRGBA(red, green, blue, alpha);
 }
 
-var Drawing = {
+const Drawing = {
   set_color,
   set_color_rgba,
   draw_rotated_line,
@@ -136,3 +136,4 @@ var Drawing = {
   draw_rounded_rect,
   draw_text,
 };
+export default Drawing;

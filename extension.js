@@ -1,27 +1,30 @@
 'use strict';
 
-const { St, Shell, GObject, Gio, GLib, Gtk, Meta, Clutter } = imports.gi;
+import St from 'gi://St';
+import Shell from 'gi://Shell';
+import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
 
-const Main = imports.ui.main;
-const Dash = imports.ui.dash.Dash;
-const Fav = imports.ui.appFavorites;
-const Layout = imports.ui.layout;
-const Point = imports.gi.Graphene.Point;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Dash} from 'resource:///org/gnome/shell/ui/dash.js';
+import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import {Me} from './utils.js';
+import LampAnimation from './effects/lamp_animation.js';
+import Animator from './animator.js';
+import AutoHide from './autohide.js';
+import Services from './services.js';
+import Style from './style.js';
+import Timer from './timer.js';
+import Dock from './dock.js';
 
-const { schemaId, settingsKeys, SettingsKeys } = Me.imports.preferences.keys;
+import {schemaId, SettingsKeys} from './preferences/keys.js';
+import {runTests} from './diagnostics.js';
 
-const LampAnimation = Me.imports.effects.lamp_animation.LampAnimation;
-const Animator = Me.imports.animator.Animator;
-const AutoHide = Me.imports.autohide.AutoHide;
-const Services = Me.imports.services.Services;
-const Style = Me.imports.style.Style;
-const Timer = Me.imports.timer.Timer;
-const Dock = Me.imports.dock.Dock;
-
-const runTests = Me.imports.diagnostics.runTests;
 
 const SERVICES_UPDATE_INTERVAL = 2500;
 
@@ -29,12 +32,10 @@ const ANIM_ICON_QUALITY = 2.0;
 const ANIM_INTERVAL = 15;
 const ANIM_INTERVAL_PAD = 15;
 
-class Extension {
+export default class AnimoDockExtension extends Extension {
   enable() {
     // for debugging - set to 255
     this._dash_opacity = 0;
-
-    this._imports = Me.imports;
 
     // three available timers
     // for persistent runs
@@ -54,8 +55,6 @@ class Extension {
     this.scale = 1.0;
     this.icon_size = 0;
     this.icon_quality = ANIM_ICON_QUALITY;
-
-    Main._anino = this;
 
     this._style = new Style();
 
@@ -109,7 +108,7 @@ class Extension {
 
     this.startUp();
 
-    log('anino-dock enabled');
+    log('animo-dock enabled');
 
     // hide artifact at startup
     if (this.panel_model) {
@@ -161,7 +160,7 @@ class Extension {
       Main.overview.dash.__box = null;
     }
 
-    log('anino-dock disabled');
+    log('animo-dock disabled');
   }
 
   animate() {
@@ -226,7 +225,7 @@ class Extension {
   }
 
   _enableSettings() {
-    this._settings = ExtensionUtils.getSettings(schemaId);
+    this._settings = this.getSettings(schemaId);
     this._settingsKeys = SettingsKeys;
 
     SettingsKeys.connectSettings(this._settings, (name, value) => {
@@ -575,7 +574,7 @@ class Extension {
         ss.push(`background: rgba(${rgba});`);
       }
 
-      styles.push(`#aninoBackground { ${ss.join(' ')}}`);
+      styles.push(`#animoBackground { ${ss.join(' ')}}`);
     }
 
     // topbar
@@ -601,7 +600,7 @@ class Extension {
       if (this.topbar_foreground_color && this.topbar_foreground_color[3] > 0) {
         let rgba = this._style.rgba(this.topbar_foreground_color);
         styles.push(
-          `#aninoDockOverlay *, #panelBox #panel * { color: rgba(${rgba}) }`
+          `#animoDockOverlay *, #panelBox #panel * { color: rgba(${rgba}) }`
         );
       } else {
         let rgba = this._style.rgba([0, 0, 0, 1]);
@@ -610,12 +609,12 @@ class Extension {
           rgba = this._style.rgba([1, 1, 1, 1]);
         }
         styles.push(
-          `#aninoDockOverlay *, #panelBox #panel * { color: rgba(${rgba}) }`
+          `#animoDockOverlay *, #panelBox #panel * { color: rgba(${rgba}) }`
         );
       }
 
       // styles.push(
-      //   `#aninoDockOverlay #panelCenter * { color: yellow; }`
+      //   `#animoDockOverlay #panelCenter * { color: yellow; }`
       // );
     }
 
@@ -715,5 +714,5 @@ class Extension {
 }
 
 function init() {
-  return new Extension();
+  return new AnimoDockExtension();
 }

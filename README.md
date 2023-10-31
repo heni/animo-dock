@@ -1,18 +1,16 @@
 <br/>
 <p align="center">
-  <h3 align="center">Anino Dock</h3>
+  <h3 align="center">Animo Dock</h3>
 
   <p align="center">
-    A GNOME Shell 40+ Extension
+    A GNOME Shell 45 Extension
     <br/>
+    (fork of [AninoDock](https://github.com/icedman/anino-dock) with Gnome Shell 45 support)
     <br/>
   </p>
 </p>
 
-![Contributors](https://img.shields.io/github/contributors/icedman/anino-dock?color=dark-green) ![Forks](https://img.shields.io/github/forks/icedman/anino-dock?style=social) ![Stargazers](https://img.shields.io/github/stars/icedman/anino-dock?style=social) ![Issues](https://img.shields.io/github/issues/icedman/anino-dock) ![License](https://img.shields.io/github/license/icedman/anino-dock) 
-
-
-![Screen Shot](https://raw.githubusercontent.com/icedman/anino-dock/main/screenshots/Screenshot%20from%202022-10-17%2021-33-29.png)
+![Screen Shot](https://raw.githubusercontent.com/heni/animo-dock/main/screenshots/Screenshot%20from%202023-10-31%2014-35-37.png)
 
 ### Features
 
@@ -45,11 +43,11 @@ Requirements:
 Manual Installation: 
 - Clone this repo
 ```bash
-$ git clone https://github.com/icedman/anino-dock.git
+$ git clone https://github.com/heni/animo-dock.git
 ```
 - Use the `Makefile` to build and install
 ```bash 
-$ cd anino-dock
+$ cd animo-dock
 $ make
 ```
 
@@ -62,7 +60,7 @@ $ makepkg -si
 
 From Gnome Extensions Repository
 
-Visit [https://extensions.gnome.org/extension/xxx/anino-dock/](https://extensions.gnome.org/extension/xxx/anino-dock/) (soon)
+(will be available soon)
 
 ## Alternative
 
@@ -91,4 +89,4 @@ chmod +x {EXTENSION_PATH}/apps/empty-trash.sh
 
 ## License
 
-Distributed under the GPL 3.0 License. See [LICENSE](https://github.com/icedman/anino-dock/blob/main/LICENSE.md) for more information.
+Distributed under the GPL 3.0 License. See [LICENSE](https://github.com/heni/animo-dock/blob/main/LICENSE.md) for more information.

@@ -1,3 +1,5 @@
+EXTENSION_UUID="animo-dock@heni.github.com"
+
 all: build install lint
 
 .PHONY: build install
@@ -7,8 +9,8 @@ build:
 
 install: build
 	echo "installing..."
-	mkdir -p ~/.local/share/gnome-shell/extensions/anino-dock@icedman.github.com/
-	cp -R ./* ~/.local/share/gnome-shell/extensions/anino-dock@icedman.github.com/
+	mkdir -p ~/.local/share/gnome-shell/extensions/${EXTENSION_UUID}/
+	cp -R ./* ~/.local/share/gnome-shell/extensions/${EXTENSION_UUID}/
 
 publish:
 	echo "publishing..."
@@ -28,16 +30,16 @@ publish:
 	rm -rf ./*.zip
 	rm build/apps/*.desktop
 	cd build ; \
-	zip -qr ../anino-dock@icedman.github.com.zip .
+	zip -qr ../${EXTENSION_UUID}.zip .
 
 install-zip: publish
 	echo "installing zip..."
-	rm -rf ~/.local/share/gnome-shell/extensions/anino-dock@icedman.github.com
-	mkdir -p ~/.local/share/gnome-shell/extensions/anino-dock@icedman.github.com/
-	unzip -q anino-dock@icedman.github.com.zip -d ~/.local/share/gnome-shell/extensions/anino-dock@icedman.github.com/
+	rm -rf ~/.local/share/gnome-shell/extensions/${EXTENSION_UUID}
+	mkdir -p ~/.local/share/gnome-shell/extensions/${EXTENSION_UUID}/
+	unzip -q ${EXTENSION_UUID}.zip -d ~/.local/share/gnome-shell/extensions/${EXTENSION_UUID}/
 
 test-prefs:
-	gnome-extensions prefs anino-dock@icedman.github.com
+	gnome-extensions prefs ${EXTENSION_UUID}
 
 test-shell: install
 	env GNOME_SHELL_SLOWDOWN_FACTOR=2 \

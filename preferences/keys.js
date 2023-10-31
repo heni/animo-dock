@@ -1,12 +1,9 @@
 'use strict';
+import PrefKeys from './prefKeys.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const { PrefKeys } = Me.imports.preferences.prefKeys;
+export const schemaId = 'org.gnome.shell.extensions.animo-dock';
 
-var schemaId = 'org.gnome.shell.extensions.anino-dock';
-
-var SettingsKeys = new PrefKeys();
+export var SettingsKeys = new PrefKeys();
 SettingsKeys.setKeys({
   // debug: {
   //   default_value: false,

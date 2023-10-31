@@ -1,12 +1,22 @@
 'use strict';
 
-const { St, Shell, GObject, Gio, GLib, Gtk, Meta, Clutter } = imports.gi;
+import St from 'gi://St';
+import Shell from 'gi://Shell';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const CustomStylesPath = Me.dir.get_child('./').get_path();
+import {Me} from './utils.js';
 
-var Style = class {
+function customStylesPath() {
+    return Me().dir.get_child('./').get_path();
+}
+
+
+export default class Style {
   constructor() {
     this.styles = {};
     this.style_contents = {};
@@ -39,7 +49,7 @@ var Style = class {
     if (fn) {
       theme.unload_stylesheet(fn);
     } else {
-      fn = Gio.File.new_for_path(`${CustomStylesPath}/${name}.css`);
+      fn = Gio.File.new_for_path(`${customStylesPath()}/${name}.css`);
       this.styles[name] = fn;
     }
 

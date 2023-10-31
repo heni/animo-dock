@@ -1,19 +1,22 @@
 'use strict';
 
-const Main = imports.ui.main;
-const Gio = imports.gi.Gio;
-const St = imports.gi.St;
-const Fav = imports.ui.appFavorites;
-const Weather = imports.misc.weather;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const AppsFolderPath = Me.dir.get_child('apps').get_path();
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 
-const Clock = Me.imports.apps.clock.Clock;
-const Calendar = Me.imports.apps.calendar.Calendar;
+import Gio from 'gi://Gio';
+import St from 'gi://St';
+
+import {Me} from './utils.js';
+import Clock from './apps/clock.js';
+import Calendar from './apps/calendar.js';
+
 
 // sync with animator
 const CANVAS_SIZE = 120;
+
+function appsFolderPath() {
+    return Me().dir.get_child('apps').get_path();
+}
 
 class ServiceCounter {
   constructor(name, interval, callback, advance) {
@@ -37,7 +40,7 @@ class ServiceCounter {
   }
 }
 
-var Services = class {
+export default class Services {
   enable() {
     this._services = [
       new ServiceCounter('trash', 1000 * 15, this.checkTrash.bind(this)),
@@ -156,9 +159,9 @@ var Services = class {
 
     this.last_mounted = mount;
     let basename = mount.get_default_location().get_basename();
-    let appname = `mount-${basename}-anino-dock.desktop`;
+    let appname = `mount-${basename}-animo-dock.desktop`;
     this.setupMountIcon(mount);
-    let favorites = Fav.getAppFavorites();
+    let favorites = AppFavorites.getAppFavorites();
     let favorite_ids = favorites._getIds();
 
     this.temporarilyMuteOverview();
@@ -177,7 +180,7 @@ var Services = class {
 
   _onMountRemoved(monitor, mount) {
     let basename = mount.get_default_location().get_basename();
-    let appname = `mount-${basename}-anino-dock.desktop`;
+    let appname = `mount-${basename}-animo-dock.desktop`;
     this._unpin(appname);
   }
 
@@ -190,7 +193,7 @@ var Services = class {
   setupMountIcon(mount) {
     let basename = mount.get_default_location().get_basename();
     let label = mount.get_name();
-    let appname = `mount-${basename}-anino-dock.desktop`;
+    let appname = `mount-${basename}-animo-dock.desktop`;
     let fullpath = mount.get_default_location().get_path();
     let icon = mount.get_icon().names[0] || 'drive-harddisk-solidstate';
     let mount_exec = 'echo "not implemented"';
@@ -198,7 +201,7 @@ var Services = class {
     let fn = Gio.File.new_for_path(`.local/share/applications/${appname}`);
 
     if (!fn.query_exists(null)) {
-      let content = `[Desktop Entry]\nVersion=1.0\nTerminal=false\nType=Application\nName=${label}\nExec=xdg-open ${fullpath}\nIcon=${icon}\nStartupWMClass=mount-${basename}-anino-dock\nActions=unmount;\n\n[Desktop Action mount]\nName=Mount\nExec=${mount_exec}\n\n[Desktop Action unmount]\nName=Unmount\nExec=${unmount_exec}\n`;
+      let content = `[Desktop Entry]\nVersion=1.0\nTerminal=false\nType=Application\nName=${label}\nExec=xdg-open ${fullpath}\nIcon=${icon}\nStartupWMClass=mount-${basename}-animo-dock\nActions=unmount;\n\n[Desktop Action mount]\nName=Mount\nExec=${mount_exec}\n\n[Desktop Action unmount]\nName=Unmount\nExec=${unmount_exec}\n`;
       const [, etag] = fn.replace_contents(
         content,
         null,
@@ -229,10 +232,16 @@ var Services = class {
           if (media && messages) {
             return;
           }
-          media =
-            c.child._delegate._messageList._scrollView.last_child.get_children()[0];
-          messages =
-            c.child._delegate._messageList._scrollView.last_child.get_children()[1];
+          try {
+            media = c.child._delegate._messageList._scrollView.last_child.get_children()[0];
+          } catch(e) { 
+            media = null;
+          }
+          try {
+            messages = c.child._delegate._messageList._scrollView.last_child.get_children()[1];
+          } catch (e) {
+            messages = null;
+          }
         });
         if (media && messages) {
           break;
@@ -345,15 +354,15 @@ var Services = class {
       mounts = this._volumeMonitor.get_mounts();
       mount_ids = mounts.map((mount) => {
         let basename = mount.get_default_location().get_basename();
-        let appname = `mount-${basename}-anino-dock.desktop`;
+        let appname = `mount-${basename}-animo-dock.desktop`;
         return appname;
       });
     }
 
     this.mounts = mounts;
-    let favs = Fav.getAppFavorites()._getIds();
+    let favs = AppFavorites.getAppFavorites()._getIds();
     favs.forEach((fav) => {
-      if (fav.startsWith('mount-') && fav.endsWith('anino-dock.desktop')) {
+      if (fav.startsWith('mount-') && fav.endsWith('animo-dock.desktop')) {
         if (!mount_ids.includes(fav)) {
           this._unpin(fav);
         }
@@ -362,7 +371,7 @@ var Services = class {
 
     mounts.forEach((mount) => {
       let basename = mount.get_default_location().get_basename();
-      let appname = `mount-${basename}-anino-dock.desktop`;
+      let appname = `mount-${basename}-animo-dock.desktop`;
       if (!favs.includes(appname)) {
         this._deferredMounts.push(mount);
       }
@@ -376,11 +385,11 @@ var Services = class {
       return;
     }
     let fn = Gio.File.new_for_path(
-      '.local/share/applications/trash-anino-dock.desktop'
+      '.local/share/applications/trash-animo-dock.desktop'
     );
 
     if (!fn.query_exists(null)) {
-      let content = `[Desktop Entry]\nVersion=1.0\nTerminal=false\nType=Application\nName=Trash\nExec=xdg-open trash:///\nIcon=user-trash\nStartupWMClass=trash-anino-dock\nActions=trash\n\n[Desktop Action trash]\nName=Empty Trash\nExec=${AppsFolderPath}/empty-trash.sh\nTerminal=true\n`;
+      let content = `[Desktop Entry]\nVersion=1.0\nTerminal=false\nType=Application\nName=Trash\nExec=xdg-open trash:///\nIcon=user-trash\nStartupWMClass=trash-animo-dock\nActions=trash\n\n[Desktop Action trash]\nName=Empty Trash\nExec=${appsFolderPath()}/empty-trash.sh\nTerminal=true\n`;
       const [, etag] = fn.replace_contents(
         content,
         null,
@@ -396,7 +405,7 @@ var Services = class {
   }
 
   _pin(app) {
-    let favorites = Fav.getAppFavorites();
+    let favorites = AppFavorites.getAppFavorites();
     if (!favorites._getIds().includes(app)) {
       this.temporarilyMuteOverview();
       favorites.addFavorite(app);
@@ -405,7 +414,7 @@ var Services = class {
   }
 
   _unpin(app) {
-    let favorites = Fav.getAppFavorites();
+    let favorites = AppFavorites.getAppFavorites();
     if (favorites._getIds().includes(app)) {
       // thread safety hack
       this.extension.animator._endAnimation();
@@ -421,9 +430,9 @@ var Services = class {
 
   updateTrashIcon(show) {
     if (show) {
-      this._pin('trash-anino-dock.desktop');
+      this._pin('trash-animo-dock.desktop');
     } else {
-      this._unpin('trash-anino-dock.desktop');
+      this._unpin('trash-animo-dock.desktop');
     }
   }
 

@@ -24,12 +24,15 @@
  */
 'use strict';
 
-const { GObject, Clutter, Meta, St } = imports.gi;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Main = imports.ui.main;
-// const Settings = Extension.imports.settings;
-const Config = imports.misc.config;
+import GObject from 'gi://GObject';
+import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
+import St from 'gi://St';
+import {Me} from '../utils.js';
+
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
+
 
 const IS_4_XX_SHELL_VERSION = Config.PACKAGE_VERSION.startsWith("4");
 const IS_3_XX_SHELL_VERSION = Config.PACKAGE_VERSION.startsWith("3");
@@ -516,7 +519,8 @@ if (IS_4_XX_SHELL_VERSION) {
     MagicLampUnminimizeEffect = MagicLampUnminimizeEffectBase;
 }
 
-var LampAnimation = {
+const LampAnimation = {
     enable,
     disable   
 }
+export default LampAnimation;

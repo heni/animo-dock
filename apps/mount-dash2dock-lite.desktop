@@ -5,7 +5,7 @@ Type=Application
 Name=Volume
 Exec=xdg-open /home/iceman
 Icon=drive-harddisk-solidstate
-StartupWMClass=mount-anino-dock
+StartupWMClass=mount-animo-dock
 Actions=mount;unmount;
 
 [Desktop Action mount]

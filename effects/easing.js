@@ -3,7 +3,7 @@
 // time, start, travel, duration
 
 /* PennerEasing */
-var Linear = {
+export var Linear = {
   easeNone: (t, b, c, d) => {
     return (c * t) / d + b;
   },
@@ -18,7 +18,7 @@ var Linear = {
   },
 };
 
-var Bounce = {
+export var Bounce = {
   easeIn: (t, b, c, d) => {
     return c - Bounce.easeOut(d - t, 0, c, d) + b;
   },
@@ -44,7 +44,7 @@ var Bounce = {
   },
 };
 
-var Back = {
+export var Back = {
   easeIn: (t, b, c, d) => {
     let s = 1.70158;
     let postFix = (t /= d);

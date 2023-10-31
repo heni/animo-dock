@@ -1,21 +1,45 @@
 // loosely based on JustPerfection & Blur-My-Shell
 
-const { Adw, Gdk, GLib, Gtk, GObject, Gio, Pango } = imports.gi;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const UIFolderPath = Me.dir.get_child('ui').get_path();
+import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import Pango from 'gi://Pango';
 
-const Gettext = imports.gettext.domain('anino-dock');
-const _ = Gettext.gettext;
+import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import {schemaId, SettingsKeys} from './preferences/keys.js';
+import {logWidgetHierarchy, logChildren} from './diagnostics.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-
-const { schemaId, SettingsKeys } = Me.imports.preferences.keys;
-
-function init() {
-  let iconTheme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default());
-  iconTheme.add_search_path(`${UIFolderPath}/icons`);
-  ExtensionUtils.initTranslations();
+const EXTENSION_UUID = 'animo-dock@heni.github.com';
+function Me() {
+    return ExtensionPreferences.lookupByUUID(EXTENSION_UUID);
 }
+
+function uiFolderPath() {
+    if (!uiFolderPath._value) {
+        uiFolderPath._value = Me().dir.get_child('ui').get_path();
+    }
+    return uiFolderPath._value;
+}
+
+export default class AnimoDockPreferences extends ExtensionPreferences {
+    _init() {
+        let iconTheme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default());
+        iconTheme.add_search_path(`${uiFolderPath()}/icons`);
+        Me().initTranslations();
+        this._initialized = true;
+    }
+
+    fillPreferencesWindow(window) {
+        if (!this._initialized) {
+            this._init();
+        }
+        return fillPreferencesWindow(window, this.getSettings());
+    }
+}
+
 
 function updateMonitors(window, builder, settings) {
   // monitors (use dbus?)
@@ -24,15 +48,29 @@ function updateMonitors(window, builder, settings) {
   monitors_model.splice(count, 6 - count, []);
 }
 
+function find_descendants_by_name(root, name_selector, _answer) {
+    _answer = _answer || [];
+    for (let ch = root.get_first_child(); ch; ch = ch.get_next_sibling()) {
+        if (ch.get_name() == name_selector) {
+            _answer.push(ch);
+        }
+        find_descendants_by_name(ch, name_selector, _answer);
+    }
+    return _answer;
+}
+
 function addMenu(window, builder) {
   let menu_util = builder.get_object('menu_util');
   window.add(menu_util);
 
   const page = builder.get_object('menu_util');
-  const pages_stack = page.get_parent(); // AdwViewStack
-  const content_stack = pages_stack.get_parent().get_parent(); // GtkStack
-  const preferences = content_stack.get_parent(); // GtkBox
-  const headerbar = preferences.get_first_child(); // AdwHeaderBar
+  // uncomment to debug hierarchy view
+  // logWidgetHierarchy(page);  
+  const preferencesToolbar = page.get_parent().get_parent().get_parent().get_parent(); // AdwToolbarView
+  const candidates = find_descendants_by_name(preferencesToolbar, "AdwHeaderBar");
+  console.assert(candidates.length == 1, `failing search for AdwHeaderBar: ${candidates}`);
+  const headerbar = candidates[0];
+  
   headerbar.pack_start(builder.get_object('info_menu'));
 
   // setup menu actions
@@ -43,15 +81,15 @@ function addMenu(window, builder) {
   const actions = [
     {
       name: 'open-bug-report',
-      link: 'https://github.com/icedman/anino-dock/issues',
+      link: 'https://github.com/heni/animo-dock/issues',
     },
     {
       name: 'open-readme',
-      link: 'https://github.com/icedman/anino-dock',
+      link: 'https://github.com/heni/animo-dock',
     },
     {
       name: 'open-license',
-      link: 'https://github.com/icedman/anino-dock/blob/master/LICENSE',
+      link: 'https://github.com/heni/animo-dock/blob/master/LICENSE',
     },
   ];
 
@@ -80,61 +118,20 @@ function addButtonEvents(window, builder, settings) {
   }
 }
 
-function buildPrefsWidget() {
-  let notebook = new Gtk.Notebook();
-
-  let builder = new Gtk.Builder();
-  builder.add_from_file(`${UIFolderPath}/legacy/general.ui`);
-  builder.add_from_file(`${UIFolderPath}/legacy/appearance.ui`);
-  builder.add_from_file(`${UIFolderPath}/legacy/tweaks.ui`);
-  builder.add_from_file(`${UIFolderPath}/legacy/others.ui`);
-  builder.add_from_file(`${UIFolderPath}/menu.ui`);
-  notebook.append_page(
-    builder.get_object('general'),
-    new Gtk.Label({ label: _('General') })
-  );
-  notebook.append_page(
-    builder.get_object('appearance'),
-    new Gtk.Label({ label: _('Appearance') })
-  );
-  notebook.append_page(
-    builder.get_object('tweaks'),
-    new Gtk.Label({ label: _('Tweaks') })
-  );
-  notebook.append_page(
-    builder.get_object('others'),
-    new Gtk.Label({ label: _('Others') })
-  );
-
-  let settings = ExtensionUtils.getSettings(schemaId);
-  SettingsKeys.connectBuilder(builder);
-  SettingsKeys.connectSettings(settings);
-
-  notebook.connect('realize', () => {
-    let gtkVersion = Gtk.get_major_version();
-    let w = gtkVersion === 3 ? notebook.get_toplevel() : notebook.get_root();
-    addButtonEvents(w, builder, settings);
-    addMenu(w, builder);
-    updateMonitors(w, builder, settings);
-  });
-  return notebook;
-}
-
-function fillPreferencesWindow(window) {
+function fillPreferencesWindow(window, settings) {
   let builder = new Gtk.Builder();
 
-  builder.add_from_file(`${UIFolderPath}/general.ui`);
-  builder.add_from_file(`${UIFolderPath}/appearance.ui`);
-  builder.add_from_file(`${UIFolderPath}/tweaks.ui`);
-  builder.add_from_file(`${UIFolderPath}/others.ui`);
-  builder.add_from_file(`${UIFolderPath}/menu.ui`);
+  builder.add_from_file(`${uiFolderPath()}/general.ui`);
+  builder.add_from_file(`${uiFolderPath()}/appearance.ui`);
+  builder.add_from_file(`${uiFolderPath()}/tweaks.ui`);
+  builder.add_from_file(`${uiFolderPath()}/others.ui`);
+  builder.add_from_file(`${uiFolderPath()}/menu.ui`);
   window.add(builder.get_object('general'));
   window.add(builder.get_object('appearance'));
   window.add(builder.get_object('tweaks'));
   window.add(builder.get_object('others'));
   window.set_search_enabled(true);
 
-  let settings = ExtensionUtils.getSettings(schemaId);
   settings.set_string('msg-to-ext', '');
 
   SettingsKeys.connectBuilder(builder);

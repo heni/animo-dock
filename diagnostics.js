@@ -1,37 +1,26 @@
 'use strict';
 
-const { St, Shell, Gio, GLib, Gtk, Meta, Clutter } = imports.gi;
+// import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const Main = imports.ui.main;
-const Dash = imports.ui.dash.Dash;
-const Fav = imports.ui.appFavorites;
-const Layout = imports.ui.layout;
-const Point = imports.gi.Graphene.Point;
+import {getPointer, warpPointer} from './diag_utils.js';
+import {schemaId, SettingsKeys} from './preferences/keys.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-const getPointer = Me.imports.utils.getPointer;
-const warpPointer = Me.imports.utils.warpPointer;
-
-const { schemaId, settingsKeys, SettingsKeys } = Me.imports.preferences.keys;
-
-var print = (msg) => {
+export function print(msg) {
   log(msg);
-  if (Main.lookingGlass && Main.lookingGlass.isOpen) {
+  /*if (Main.lookingGlass && Main.lookingGlass.isOpen) {
     Main.lookingGlass.close();
-    // Main.lookingGlass._pushResult('anino', msg);
-  }
+    // Main.lookingGlass._pushResult('animo', msg);
+  }*/
 };
 
-function add_message(seqs, msg, delay) {
+export function add_message(seqs, msg, delay) {
   seqs.push({
     func: () => print(msg),
     delay,
   });
 }
 
-function add_move_pointer(seqs, x, y, delay) {
+export function add_move_pointer(seqs, x, y, delay) {
   seqs.push({
     x: x,
     y: y,
@@ -44,7 +33,7 @@ function add_move_pointer(seqs, x, y, delay) {
   });
 }
 
-function add_slide_pointer(seqs, x, y, x2, y2, intervals, delay) {
+export function add_slide_pointer(seqs, x, y, x2, y2, intervals, delay) {
   let dd = delay / intervals;
   let dx = (x2 - x) / intervals;
   let dy = (y2 - y) / intervals;
@@ -66,7 +55,7 @@ function add_slide_pointer(seqs, x, y, x2, y2, intervals, delay) {
   }
 }
 
-function add_test_values(seqs, extension, settings, name, value, values) {
+export function add_test_values(seqs, extension, settings, name, value, values) {
   let k = settings.getKey(name);
   if (k.test && k.test.values) {
     values = k.test.values;
@@ -198,7 +187,7 @@ function addMotionTests(_seqs, extension, settings) {
   // runSequence(_seqs);
 }
 
-function addPreferenceTests(_seqs, extension, settings) {
+export function addPreferenceTests(_seqs, extension, settings) {
   add_message(_seqs, 'begin tests', 0);
 
   let keys = settings.keys();
@@ -226,9 +215,29 @@ function addPreferenceTests(_seqs, extension, settings) {
   add_message(_seqs, 'done', 0);
 }
 
-var runTests = (extension, settings) => {
+export function runTests(extension, settings) {
   let _seqs = [];
   addMotionTests(_seqs, extension, settings);
   addPreferenceTests(_seqs, extension, settings);
   extension._diagnosticTimer.runSequence(_seqs);
 };
+
+export function logChildren(widget, indent, logger) {
+    logger = logger || console.log;
+    indent = indent || 0;
+
+    let indent_str = '\t'.repeat(indent);
+    for (let k = 0, ch = widget.get_first_child(); ch; ++k, ch = ch.get_next_sibling()) {
+        console.log(`${indent_str}C[${k}] = ${ch}`);
+    }
+}
+
+export function logWidgetHierarchy(widget, logger) {
+    logger = logger || console.log;
+
+    for (let n = widget, i = 0; n; ++i, n = n.get_parent()) {
+        console.log(`H[${i}]: ${n}`);
+        logChildren(n, 1, logger);
+    }
+}
+

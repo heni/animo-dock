@@ -2,22 +2,29 @@
 
 'use strict';
 
-const { GLib, GObject, Gio, Clutter, Shell } = imports.gi;
-const ExtensionUtils = imports.misc.extensionUtils;
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import Clutter from 'gi://Clutter';
+import Shell from 'gi://Shell';
+import {Me} from '../utils.js';
 
-const Me = ExtensionUtils.getCurrentExtension();
+function shaderPath() {
+    if (!shaderPath._value) {
+        shaderPath._value =  GLib.build_filenamev([
+            Me().path,
+            'effects',
+            'tint_effect.glsl',
+        ]);
+    }
+    return shaderPath._value;
+}
 
-const SHADER_PATH = GLib.build_filenamev([
-  Me.path,
-  'effects',
-  'tint_effect.glsl',
-]);
-
-const get_shader_source = (_) => {
+function get_shader_source() {
   try {
-    return Shell.get_file_contents_utf8_sync(SHADER_PATH);
+    return Shell.get_file_contents_utf8_sync(shaderPath());
   } catch (e) {
-    log(`[anino] error loading shader from ${SHADER_PATH}: ${e}`);
+    log(`[animo] error loading shader from ${shaderPath()}: ${e}`);
     return null;
   }
 };
@@ -31,9 +38,9 @@ const get_shader_source = (_) => {
 ///
 /// GJS Doc:
 /// https://gjs-docs.gnome.org/clutter10~10_api/clutter.shadereffect
-var TintEffect = new GObject.registerClass(
+const TintEffect = new GObject.registerClass(
   {},
-  class AninoColorShader extends Clutter.ShaderEffect {
+  class AnimoColorShader extends Clutter.ShaderEffect {
     _init(params) {
       this._red = null;
       this._green = null;
@@ -142,3 +149,4 @@ var TintEffect = new GObject.registerClass(
     }
   }
 );
+export default TintEffect;

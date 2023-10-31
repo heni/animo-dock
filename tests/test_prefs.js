@@ -49,7 +49,7 @@ prefKeys.setKeys({
 });
 
 let app = new Adw.Application({
-  application_id: 'com.anino-dock.GtkApplication',
+  application_id: 'com.animo-dock.GtkApplication',
 });
 
 app.connect('activate', (me) => {
@@ -76,7 +76,7 @@ app.connect('activate', (me) => {
 
   let menu_util = builder.get_object('menu_util');
   w.add(menu_util);
-  w.title = 'Anino Dock';
+  w.title = 'Animo Dock';
 
   const page = builder.get_object('menu_util');
   const pages_stack = page.get_parent(); // AdwViewStack
@@ -93,15 +93,15 @@ app.connect('activate', (me) => {
   const actions = [
     {
       name: 'open-bug-report',
-      link: 'https://github.com/icedman/anino-dock/issues',
+      link: 'https://github.com/heni/animo-dock/issues',
     },
     {
       name: 'open-readme',
-      link: 'https://github.com/icedman/anino-dock',
+      link: 'https://github.com/heni/animo-dock',
     },
     {
       name: 'open-license',
-      link: 'https://github.com/icedman/anino-dock/blob/master/LICENSE',
+      link: 'https://github.com/heni/animo-dock/blob/master/LICENSE',
     },
   ];
 

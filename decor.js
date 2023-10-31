@@ -1,18 +1,21 @@
 // adapted from https://github.com/jderose9/dash-to-panel
 // adapted from https://github.com/micheleg/dash-to-dock
 
-const { Clutter, GObject, GLib, PangoCairo, Pango } = imports.gi;
-const Cairo = imports.cairo;
+import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
+import Pango from 'gi://Pango';
+import PangoCairo from 'gi://PangoCairo';
+import Cairo from 'cairo';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Drawing = Me.imports.drawing.Drawing;
+import {Me} from './utils.js';
+import Drawing from './drawing.js';
 
 let size = 400;
 
-var Dot = GObject.registerClass(
+const Dot = GObject.registerClass(
   {},
-  class AninoDot extends Clutter.Actor {
+  class AnimoDot extends Clutter.Actor {
     _init(x) {
       super._init();
 
@@ -326,3 +329,6 @@ var Dot = GObject.registerClass(
     }
   }
 );
+
+export default Dot;
+

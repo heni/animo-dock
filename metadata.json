@@ -1,15 +1,16 @@
 {
   "description": "The Animated & Effectful Dock",
-  "name": "Anino Dock",
+  "name": "Animo Dock",
+  "authors": [ "heni" ],
   "original-authors": [
     "icedman"
   ],
   "shell-version": [
-    "40", "41", "42", "43", "44"
+    "45"
   ],
-  "url": "https://github.com/icedman/anino-dock",
-  "uuid": "anino-dock@icedman.github.com",
-  "schema-id": "org.gnome.shell.extensions.anino-dock",
-  "gettext-domain": "anino-dock",
+  "url": "https://github.com/heni/animo-dock",
+  "uuid": "animo-dock@heni.github.com",
+  "settings-schema": "org.gnome.shell.extensions.animo-dock",
+  "gettext-domain": "animo-dock",
   "version": 1
 }

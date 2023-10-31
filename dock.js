@@ -1,19 +1,22 @@
 'use strict';
 
-const { St, Shell, GObject, Gio, GLib, Meta, Clutter } = imports.gi;
+import St from 'gi://St';
+import Shell from 'gi://Shell';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
+import Graphene from 'gi://Graphene';
 
-const Main = imports.ui.main;
-const Panel = imports.ui.panel.Panel;
-const Dash = imports.ui.dash.Dash;
-const Fav = imports.ui.appFavorites;
-const Point = imports.gi.Graphene.Point;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Dash} from 'resource:///org/gnome/shell/ui/dash.js'
+import {Panel} from 'resource:///org/gnome/shell/ui/panel.js';
+import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Animator = Me.imports.animator.Animator;
-const AutoHide = Me.imports.autohide.AutoHide;
-const Bounce = Me.imports.effects.easing.Bounce;
-const Linear = Me.imports.effects.easing.Linear;
+import Animator from './animator.js';
+import AutoHide from './autohide.js';
+import {Bounce, Linear} from './effects/easing.js';
 
 const EDGE_DISTANCE = 20;
 const MIN_SCROLL_RESOLUTION = 4;
@@ -21,12 +24,12 @@ const MAX_SCROLL_RESOLUTION = 10;
 
 let _preferredIconSizes = null;
 
-var Dock = GObject.registerClass(
+const Dock = GObject.registerClass(
   {},
-  class AninoDock extends St.Widget {
+  class AnimoDock extends St.Widget {
     _init() {
       super._init({
-        name: 'aninoDock',
+        name: 'animoDock',
         // vertical: true,
         reactive: true,
         track_hover: true,
@@ -34,10 +37,12 @@ var Dock = GObject.registerClass(
 
       this._scrollCounter = 0;
 
-      let pivot = new Point();
-      pivot.x = 0.5;
-      pivot.y = 0.5;
-      this.pivot_point = pivot;
+      this.get_pivot_point = () => { 
+          let pivot = new Graphene.Point();
+          pivot.x = 0.5;
+          pivot.y = 0.5;
+          return pivot; 
+      };
 
       this.animator = new Animator();
       this.animator.dashContainer = this;
@@ -78,7 +83,7 @@ var Dock = GObject.registerClass(
       if (this.dash) {
         this.remove_child(this.dash);
       }
-      this.dash = new Dash();
+      this.dash= new Dash();
       this.dash.set_name('dash');
       this.dash.add_style_class_name('overview');
       this.dash._adjustIconSize = () => {};
@@ -347,7 +352,7 @@ var Dock = GObject.registerClass(
 
       // hide running apps
       if (this.extension.favorites_only) {
-        let favorites = Fav.getAppFavorites();
+        let favorites = AppFavorites.getAppFavorites();
         let favorite_ids = favorites._getIds();
         icons = icons.filter((i) => {
           let app = i.child.app;
@@ -808,3 +813,5 @@ var Dock = GObject.registerClass(
     }
   }
 );
+
+export default Dock;

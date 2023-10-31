@@ -1,153 +1,124 @@
-function gen_frames(settings) {
-  let {
-    iconsCount,
-    iconSize,
-    iconSpacing,
-    scaleFactor,
-    pointer,
-    width,
-    height,
-    dashWidth,
-    debugDraw,
-  } = settings;
-
-  let frames = [];
-  for (let i = 0; i < iconsCount; i++) {
-    frames.push({
-      idx: i,
-      x: 0,
-      y: 0,
-      l: iconSpacing,
-      r: 0,
-      p: 1,
-    });
-  }
-
-  function total_length() {
-    let tl = 0;
-    frames.forEach((f) => {
-      tl += f.l;
-    });
-    return tl;
-  }
-
-  function reposition() {
-    let tl = total_length();
-    let r1 = dashWidth / 2 - tl / 2;
-    frames.forEach((f) => {
-      f.r = r1;
-      r1 += f.l;
-    });
-  }
-
-  reposition();
-
-  if (pointer) {
-    let left = [];
-    let center = [];
-    let right = [];
-
-    let thresh = iconSpacing * 3.5;
-    let thresh2 = thresh / 2;
+function log_to_debug_draw(kws) {
+    let {x, y, thresh, iconSize, pointer, vertical, debugDraw} = kws;
     let cx = pointer[0];
     let cy = pointer[1];
 
-    let doLeft = true;
-    let doRight = false;
-    let totalP = 0;
-
-    let pp = cx;
-    if (settings.vertical) {
-      pp = cy;
-    }
-
-    frames.forEach((f) => {
-      let ir = f.r + f.l / 2;
-      let dr = ir - pp;
-      dr = Math.sqrt(dr * dr);
-      f.p = 1;
-      f._p = 1;
-
-      if (dr < thresh2) {
-        f.in = true;
-        let p = 1 - dr / thresh2;
-        f.p = 1 + p * 0.7;
-        f._p = 1 + (0.5 + settings.animation_magnify * 0.6) * p;
-        totalP += f.p;
-        doLeft = false;
-        center.push(f);
-      } else {
-        if (!doLeft) {
-          doRight = true;
-        }
-      }
-
-      if (doLeft) {
-        left.push(f);
-      }
-      if (doRight) {
-        right.push(f);
-      }
-    });
-
-    if (totalP > 0) {
-      let tw = (iconsCount + 1) * iconSpacing;
-      let r1 = dashWidth / 2 - tw / 2;
-      let leftX = r1;
-      left.forEach((f) => {
-        f.r = r1;
-        r1 += f.l;
-        leftX = r1;
-      });
-      r1 = dashWidth / 2 + tw / 2 - right.length * iconSpacing;
-      right.forEach((f) => {
-        f.r = r1;
-        r1 += f.l;
-      });
-      let rightX =
-        leftX + (iconsCount - left.length - right.length + 1) * iconSpacing;
-      let area = rightX - leftX;
-
-      let usedArea = 0;
-      center.forEach((f) => {
-        f.r = leftX;
-        f.l = Math.floor(area * (f.p / totalP));
-        leftX += f.l;
-        usedArea += f.l;
-      });
-
-      let diff = area - usedArea;
-      center[0].l += diff;
-    }
-
-    if (settings.vertical) {
+    if (vertical) {
       debugDraw.push({
         t: 'circle',
-        x: settings.x + iconSize / 2,
-        y: settings.y + cy,
+        X: x + iconSize / 2,
+        y: y + cy,
         d: thresh,
         c: [1, 1, 0, 1],
       });
     } else {
       debugDraw.push({
         t: 'circle',
-        x: settings.x + cx,
-        y: settings.y + iconSize / 2,
+        x: x + cx,
+        y: y + iconSize / 2,
         d: thresh,
         c: [1, 1, 0, 1],
       });
     }
+}
+
+function splice_frames_by_pointer(
+    frames, p_loc, settings
+) {
+  const dist_threshold = settings.dist_threshold || (frames[0].l * 1.75);
+  const animation_magnify = settings.animation_magnify || 0.5;
+
+  let left = [];
+  let right = [];
+  let center = [];
+
+  for (let f of frames) {
+    const ir = f.r + f.l / 2;
+    const dr = ir - p_loc;
+    f.p = 1;
+    f._p = 1;
+
+    if (Math.abs(dr) < dist_threshold) {
+      const p = 1 - Math.abs(dr) / dist_threshold;
+      f.p = 1 + p * 0.7;
+      f._p = 1 + (0.5 + animation_magnify * 0.6) * p;
+      center.push(f);
+    } else {
+      if (dr < 0) {
+        left.push(f);
+      } else {
+        right.push(f);
+      }
+    }
+  }
+  return { left, center, right };
+}
+
+function gen_frames(settings) {
+  const {
+    iconsCount, iconSpacing, pointer,
+    dashWidth, vertical, animation_magnify,
+  } = settings;
+
+  let frames = [];
+  for (let i = 0; i < iconsCount; i++) {
+    frames.push({ idx: i, x: 0, y: 0, l: iconSpacing, r: 0, p: 1, });
   }
 
-  frames.forEach((f) => {
-    f.l = Math.floor(f.l);
-  });
+  {
+    // do equal space positioning
+    const total_length = iconsCount * iconSpacing;
+    let r1 = Math.floor(dashWidth/2 - total_length/2);
+    for (let f of frames) {
+        f.r = r1;
+        r1 += f.l;
+    }
+  }
+
+  if (pointer) {
+    const { left, center, right } = splice_frames_by_pointer(
+      frames, vertical ? pointer[1] : pointer[0],
+      { dist_threshold: iconSpacing * 1.75, animation_magnify }
+    );
+
+    if (center.length) {
+      const totalP = center.reduce((s, f) => s + f.p, 0);
+      const totalW = (iconsCount + 1) * iconSpacing;
+      let leftX = Math.floor(dashWidth / 2 - totalW / 2);
+      for (let f of left) {
+        f.r = leftX;
+        leftX += f.l;
+      }
+      const rightX = Math.floor(dashWidth / 2 + totalW / 2 - right.length * iconSpacing);
+      let r1 = rightX;
+      for (let f of right) {
+        f.r = r1;
+        r1 += f.l;
+      }
+
+      const center_area = (center.length + 1) * iconSpacing;
+      for (let f of center) {
+        f.r = leftX;
+        f.l = Math.floor(center_area * (f.p / totalP));
+        leftX += f.l;
+      }
+
+      center[center.length - 1].l = rightX - center[center.length - 1].r;
+    }
+
+    log_to_debug_draw({
+        thresh: 3.5 * iconSpacing, pointer, vertical,
+        ...settings
+    });
+  }
 
   return frames;
 }
 
-var Animation = (animateIcons, pointer, settings) => {
-  if (!animateIcons.length) return;
+
+export default function Animation(animateIcons, pointer, settings) {
+  if (!animateIcons.length) 
+    return;
   let _firstIcon = animateIcons[0];
   let _lastIcon = animateIcons[animateIcons.length - 1];
   let first = _firstIcon._pos || [0, 0];
@@ -203,7 +174,7 @@ var Animation = (animateIcons, pointer, settings) => {
     frames.forEach((i) => {
       debugDraw.push({
         t: 'circle',
-        y: i.r + settings.y + i.l / 2,
+        y: i.r + settings.y + i.l/2,
         x:
           i.x +
           settings.x +
@@ -213,6 +184,7 @@ var Animation = (animateIcons, pointer, settings) => {
         d: i.l,
         c: [1, 0, 0, 1],
       });
+      animateIcons[i.idx - 1]._pos[1] = i.r + settings.y + i.l/2;
     });
   } else {
     frames.forEach((i) => {
@@ -223,6 +195,7 @@ var Animation = (animateIcons, pointer, settings) => {
         d: i.l,
         c: [1, 0, 0, 1],
       });
+      animateIcons[i.idx - 1]._pos[0] = i.r + settings.x + i.l/2;
     });
   }
 
@@ -249,6 +222,13 @@ var Animation = (animateIcons, pointer, settings) => {
     a._targetScale = f._p;
     a._targetSpread = f.l;
   });
+
+  /*let al = animateIcons.map(a => { return {
+      pos: a._pos,
+      scale: a._targetScale,
+      spread: a._targetSpread,
+  }});
+  console.log(`Icons Animation: ${JSON.stringify(al)}`);*/
 
   return {
     first,

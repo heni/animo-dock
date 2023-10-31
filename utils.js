@@ -1,54 +1,35 @@
 'use strict';
 
-const GLib = imports.gi.GLib;
-const Gdk = imports.gi.Gdk;
+import GLib from 'gi://GLib';
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const dummy_pointer = {
-  get_position: () => {
-    return [{}, 0, 0];
-  },
-  warp: (screen, x, y) => {},
-};
+export const EXTENSION_UUID = 'animo-dock@heni.github.com';
+export function Me() {
+    let self = Me;
+    if (self._me == null) {
+        self._me = Extension.lookupByUUID(EXTENSION_UUID);
+    }
+    return self._me;
+}
 
-var getPointer = () => {
-  let display = Gdk.Display.get_default();
-
-  // wayland?
-  if (!display) {
-    return dummy_pointer;
-  }
-
-  let deviceManager = display.get_device_manager();
-  if (!deviceManager) {
-    return dummy_pointer;
-  }
-  let pointer = deviceManager.get_client_pointer() || dummy_pointer;
-  return pointer;
-};
-
-var warpPointer = (pointer, x, y) => {
-  let [screen, pointerX, pointerY] = pointer.get_position();
-  pointer.warp(screen, x, y);
-};
-
-var setTimeout = (func, delay, ...args) => {
+export function setTimeout(func, delay, ...args) {
   const wrappedFunc = () => {
     func.apply(this, args);
   };
   return GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, wrappedFunc);
 };
 
-var setInterval = (func, delay, ...args) => {
+export function setInterval(func, delay, ...args) {
   const wrappedFunc = () => {
     return func.apply(this, args) || true;
   };
   return GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, wrappedFunc);
 };
 
-var clearTimeout = (id) => {
+export function clearTimeout(id) {
   GLib.source_remove(id);
 };
 
-var clearInterval = (id) => {
+export function clearInterval(id) {
   GLib.source_remove(id);
 };

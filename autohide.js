@@ -1,16 +1,15 @@
 'use strict';
 
-const Main = imports.ui.main;
-const Dash = imports.ui.dash.Dash;
-const Layout = imports.ui.layout;
-const Shell = imports.gi.Shell;
-const Meta = imports.gi.Meta;
-const St = imports.gi.St;
-const GLib = imports.gi.GLib;
-const Point = imports.gi.Graphene.Point;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Dash} from 'resource:///org/gnome/shell/ui/dash.js'
+import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import Shell from 'gi://Shell';
+import Meta from 'gi://Meta';
+import St from 'gi://St';
+import GLib from 'gi://GLib';
+
+import {Me} from './utils.js';
 
 const HIDE_ANIMATION_INTERVAL = 15;
 const HIDE_ANIMATION_INTERVAL_PAD = 15;
@@ -30,7 +29,7 @@ const handledWindowTypes = [
   // Meta.WindowType.SPLASHSCREEN
 ];
 
-var AutoHide = class {
+export default class AutoHide {
   enable() {
     // log('enable autohide');
     this._enabled = true;

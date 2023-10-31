@@ -1,29 +1,38 @@
 'use strict';
 
-const { St, Shell, GObject, Gio, GLib, Gtk, Meta, Clutter } = imports.gi;
-const Main = imports.ui.main;
-const Dash = imports.ui.dash.Dash;
-const Point = imports.gi.Graphene.Point;
+import St from 'gi://St';
+import Shell from 'gi://Shell';
+import GObject from 'gi://GObject';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
+import Graphene from 'gi://Graphene';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const DrawOverlay = Me.imports.apps.overlay.DrawOverlay;
-const Drawing = Me.imports.drawing.Drawing;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Dash} from 'resource:///org/gnome/shell/ui/dash.js'
 
-const Dot = Me.imports.decor.Dot;
+import {Me} from './utils.js';
+import DrawOverlay from './apps/overlay.js';
+import Drawing from './drawing.js';
+
+import Dot from './decor.js';
 
 const DOT_CANVAS_SIZE = 96;
 
-var DockIcon = GObject.registerClass(
+export var DockIcon = GObject.registerClass(
   {},
-  class AninoDockIcon extends St.Widget {
+  class AnimoDockIcon extends St.Widget {
     _init() {
       super._init({ name: 'DockIcon', reactive: false });
 
-      let pivot = new Point();
-      pivot.x = 0.5;
-      pivot.y = 0.5;
-      this.pivot_point = pivot;
+      this.get_pivot_point = () => {
+          let pivot = new Graphene.Point();
+          pivot.x = 0.5;
+          pivot.y = 0.5;
+          return pivot;
+      };
     }
 
     update(params) {
@@ -76,9 +85,9 @@ var DockIcon = GObject.registerClass(
   }
 );
 
-var IconsContainer = GObject.registerClass(
+export var IconsContainer = GObject.registerClass(
   {},
-  class AninoIconsContainer extends St.Widget {
+  class AnimoIconsContainer extends St.Widget {
     _init(params) {
       super._init({
         name: 'IconsContainer',
@@ -149,9 +158,9 @@ var IconsContainer = GObject.registerClass(
   }
 );
 
-var DotsContainer = GObject.registerClass(
+export var DotsContainer = GObject.registerClass(
   {},
-  class AninoDotsContainer extends St.Widget {
+  class AnimoDotsContainer extends St.Widget {
     _init(params) {
       super._init({
         name: 'DotsContainer',
@@ -351,9 +360,9 @@ var DotsContainer = GObject.registerClass(
   }
 );
 
-var DockExtension = GObject.registerClass(
+export var DockExtension = GObject.registerClass(
   {},
-  class AninoDockExtension extends St.Widget {
+  class AnimoDockExtension extends St.Widget {
     _init(params) {
       super._init({
         reactive: true,
@@ -419,9 +428,9 @@ var DockExtension = GObject.registerClass(
   }
 );
 
-var DockOverlay = GObject.registerClass(
+export var DockOverlay = GObject.registerClass(
   {},
-  class AninoDockOverlay extends St.Widget {
+  class AnimoDockOverlay extends St.Widget {
     _init(params) {
       super._init({
         name: 'DockOverlay',

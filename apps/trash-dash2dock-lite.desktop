@@ -5,7 +5,7 @@ Type=Application
 Name=Trash
 Exec=xdg-open trash:///
 Icon=user-trash
-StartupWMClass=trash-anino-dock
+StartupWMClass=trash-animo-dock
 Actions=trash
 
 [Desktop Action trash]

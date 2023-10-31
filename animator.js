@@ -1,34 +1,27 @@
 'use strict';
 
-const Main = imports.ui.main;
-const Dash = imports.ui.dash.Dash;
-const Layout = imports.ui.layout;
-const Shell = imports.gi.Shell;
-const Meta = imports.gi.Meta;
-const St = imports.gi.St;
-const Clutter = imports.gi.Clutter;
-const GLib = imports.gi.GLib;
-const Point = imports.gi.Graphene.Point;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Dash} from 'resource:///org/gnome/shell/ui/dash.js'
+import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
+import Shell from 'gi://Shell';
+import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
+import St from 'gi://St';
+import GLib from 'gi://GLib';
+import Graphene from 'gi://Graphene';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import {Me} from './utils.js';
 
-const TintEffect = Me.imports.effects.tint_effect.TintEffect;
-const MonochromeEffect = Me.imports.effects.monochrome_effect.MonochromeEffect;
-const Animation = Me.imports.effects.maclike_animation.Animation;
-const Drawing = Me.imports.drawing.Drawing;
 
-const {
-  IconsContainer,
-  DotsContainer,
-  DockExtension,
-  DockOverlay,
-  explodeDashIcon,
-} = Me.imports.dockItems;
 
-const { DockBackground } = Me.imports.background;
+import TintEffect from './effects/tint_effect.js';
+import MonochromeEffect from './effects/monochrome_effect.js';
+import Animation from './effects/maclike_animation.js';
 
-const DrawOverlay = Me.imports.apps.overlay.DrawOverlay;
+import {IconsContainer, DotsContainer, DockExtension, DockOverlay} from './dockItems.js';
+import DockBackground from './background.js';
+import DrawOverlay from './apps/overlay.js';
 
 const ANIM_POS_COEF = 1.5;
 const ANIM_SCALE_COEF = 2.5;
@@ -44,7 +37,7 @@ const FIND_ICONS_SKIP_FRAMES = 16;
 const THROTTLE_DOWN_FRAMES = 30;
 const THROTTLE_DOWN_DELAY_FRAMES = 20;
 
-var Animator = class {
+export default class Animator {
   constructor() {
     this._enabled = false;
   }
@@ -53,21 +46,21 @@ var Animator = class {
     if (this._enabled) return;
 
     this._iconsContainer = new IconsContainer({
-      name: 'aninoIconsContainer',
+      name: 'animoIconsContainer',
       offscreen_redirect: Clutter.OffscreenRedirect.ALWAYS,
       reactive: false,
     });
 
     this._dotsContainer = new DotsContainer({
-      name: 'aninoDotsContainer',
+      name: 'animoDotsContainer',
       reactive: false,
     });
 
-    this._background = new DockBackground({ name: 'aninoBackground' });
-    this._dockExtension = new DockExtension({ name: 'aninoReactExtension' });
+    this._background = new DockBackground({ name: 'animoBackground' });
+    this._dockExtension = new DockExtension({ name: 'animoReactExtension' });
     this._dockExtension.listeners = this.dashContainer.listeners;
     this._dockExtension.visible = false;
-    this._dockOverlay = new DockOverlay({ name: 'aninoDockOverlay' });
+    this._dockOverlay = new DockOverlay({ name: 'animoDockOverlay' });
 
     this._overlay = new DrawOverlay(
       this.dashContainer._monitor.width,
@@ -167,6 +160,30 @@ var Animator = class {
     let scaleFactor = this.dashContainer._monitor.geometry_scale;
     return scaleFactor;
   }
+ 
+  _getNearestIcon(animateIcons) {
+    const pointer = global.get_pointer();
+    const iconSize = Math.floor(this.dashContainer.iconSize);
+    const scaleFactor = this._getScaleFactor();
+
+    let nearestDistance = null;
+    let nearestIcon = null;
+    for (let icon of animateIcons) {
+        const dst = this._get_distance(pointer, icon._pos);
+        if (dst > iconSize * ANIM_ICON_HIT_AREA * scaleFactor)
+            continue;
+        
+        icon._distance = dst;
+        icon._dx = icon._pos[0] - pointer[0];
+        icon._dy = icon._pos[1] - pointer[1];
+
+        if (nearestDistance == null || nearestDistance > dst) {
+            nearestDistance = dst;
+            nearestIcon = icon;
+        }
+    }
+    return {nearestIcon, nearestDistance};
+  }
 
   _animate() {
     // todo ... simplify the entire function
@@ -253,36 +270,28 @@ var Animator = class {
       this.dashContainer.dash.style += `padding-${padEndPos}: ${padEnd}px;`;
     }
 
-    let pivot = new Point();
+    let pivot = new Graphene.Point();
     pivot.x = 0.5;
     pivot.y = 1.0;
 
     let validPosition = this._iconsCount > 1;
     let dock_position = this.dashContainer._position;
-    let ix = 0;
-    let iy = 1;
 
     this.dashContainer.dash.opacity = this.extension._dash_opacity;
     this.dashContainer.dash._background.visible = false;
 
     switch (this.dashContainer._position) {
       case 'top':
-        ix = 0;
-        iy = -1.0;
         pivot.x = 0.0;
         pivot.y = 0.0;
         break;
       case 'right':
-        ix = 1;
-        iy = 0;
         pivot.x = 1.0;
         pivot.y = 0.5;
         break;
       case 'bottom':
         break;
       case 'left':
-        ix = 1;
-        iy = 0;
         pivot.x = 0.0;
         pivot.y = 0.5;
         break;
@@ -314,9 +323,8 @@ var Animator = class {
       }
     });
 
-    let nearestIdx = -1;
-    let nearestIcon = null;
-    let nearestDistance = -1;
+    let ignoreNearestIcon = false;
+    var nearestIcon = null, nearestDistance = null;
 
     let animateIcons = this._iconsContainer.get_children();
     animateIcons = this._iconsContainer.get_children().filter((c) => {
@@ -377,24 +385,6 @@ var Animator = class {
         icon._img.set_icon_size(iconSize * this.extension.icon_quality);
       }
 
-      // get nearest
-      let bposcenter = [...pos];
-      bposcenter[0] += (iconSize * scaleFactor) / 2;
-      bposcenter[1] += (iconSize * scaleFactor) / 2;
-      let dst = this._get_distance(pointer, bposcenter);
-
-      if (
-        (nearestDistance == -1 || nearestDistance > dst) &&
-        dst < iconSize * ANIM_ICON_HIT_AREA * scaleFactor
-      ) {
-        nearestDistance = dst;
-        nearestIcon = icon;
-        nearestIdx = idx;
-        icon._distance = dst;
-        icon._dx = bposcenter[0] - pointer[0];
-        icon._dy = bposcenter[1] - pointer[1];
-      }
-
       icon._target = pos;
       icon._targetScale = 1;
       icon._targetSpread = iconSpacing * scaleFactor;
@@ -417,7 +407,7 @@ var Animator = class {
     // preview mode
     // simulate animation at hovering middle icon
     if (this._preview && this._preview > 0) {
-      nearestIdx = Math.floor(animateIcons.length / 2);
+      let nearestIdx = Math.floor(animateIcons.length / 2);
       nearestIcon = animateIcons[nearestIdx];
       nearestDistance = 0;
       this._preview -= this.animationInterval;
@@ -427,7 +417,7 @@ var Animator = class {
 
     let isWithin = this._isWithinDash(pointer);
     if (!this._preview && !isWithin) {
-      nearestIcon = null;
+      ignoreNearestIcon = true;
     }
 
     // log(`${nearestIdx} ${nearestDistance}`);
@@ -444,7 +434,7 @@ var Animator = class {
         this.extension.animation_spread ==
         0
     ) {
-      nearestIcon = null;
+      ignoreNearestIcon = true;
     }
 
     // when hidden and not peeking
@@ -454,7 +444,7 @@ var Animator = class {
         this.extension.autohider._enabled &&
         !this.extension.autohider._shown
       ) {
-        nearestIcon = null;
+        ignoreNearestIcon = true;
       }
     }
 
@@ -471,12 +461,16 @@ var Animator = class {
       i._pos = p;
     });
 
-    if (!nearestIcon) {
+    if (ignoreNearestIcon) {
       this._overlay.visible = false;
+      nearestIcon = null;
+    } else {
+        if (!nearestIcon) {
+            var {nearestIcon, nearestDistance} = this._getNearestIcon(animateIcons);
+        }
     }
 
-    this._nearestIcon = nearestIcon;
-    this.dashContainer._nearestIcon = nearestIcon;
+    this._nearestIcon = this.dashContainer._nearestIcon = nearestIcon;
 
     let px = pointer[0];
     let py = pointer[1];
@@ -509,23 +503,30 @@ var Animator = class {
         vertical,
       });
 
+      // search new nearest icon (after animation shifts)
+      var {nearestIcon, nearestDistance} = this._getNearestIcon(animateIcons);
+      this._nearestIcon = this.dashContainer._nearestIcon = nearestIcon;
+
       this.dashContainer.dash.style = '';
 
       // re-center the dash
       {
-        let width = this.extension._vertical
+        const is_vertical = this.extension._vertical;
+        let dash = this.dashContainer.dash;
+        const width = this.extension._vertical
           ? this.dashContainer.height
           : this.dashContainer.width;
 
-        this.dashContainer.dash[tx] =
+
+        dash[tx] =
           width / 2 -
           ((this._iconsCount + 1) * anim.iconSpacing * scaleFactor) / 2;
         if (this.extension._vertical) {
-          this.dashContainer.dash.style = `padding-bottom: ${
+          dash.style = `padding-bottom: ${
             padEnd + anim.padRight
           }px;`;
         } else {
-          this.dashContainer.dash.style = `padding-right: ${
+          dash.style = `padding-right: ${
             padEnd + anim.padRight
           }px;`;
         }
@@ -793,7 +794,7 @@ var Animator = class {
           this._beginAnimation();
         }, 100);
       } else {
-        this.extension._loTimer.runDebounced(this.debounceReadySeq);
+        this.debounceReadySeq = this.extension._loTimer.runDebounced(this.debounceReadySeq);
       }
 
       return [];
@@ -840,8 +841,8 @@ var Animator = class {
     //   log(`animation triggered by ${caller}`);
     // }
 
-    if (this.extension._hiTimer && this.debounceEndSeq) {
-      this.extension._loTimer.runDebounced(this.debounceEndSeq);
+    if (this.extension._loTimer && this.debounceEndSeq) {
+      this.debounceEndSeq = this.extension._loTimer.runDebounced(this.debounceEndSeq);
       // this.extension._loTimer.cancel(this.debounceEndSeq);
     }
 
@@ -889,14 +890,14 @@ var Animator = class {
           'debounceEndAnimation'
         );
       } else {
-        this.extension._loTimer.runDebounced(this.debounceEndSeq);
+        this.debounceEndSeq = this.extension._loTimer.runDebounced(this.debounceEndSeq);
       }
     }
   }
 
   // todo: move to dockIcon
   _onButtonEvent(obj, evt) {
-    Main._lastButtonEvent = evt;
+    this._lastButtonEvent = evt;
     let pressed = evt.type() == Clutter.EventType.BUTTON_PRESS;
     let button1 = (evt.get_state() & Clutter.ModifierType.BUTTON1_MASK) != 0;
     let shift = (evt.get_state() & Clutter.ModifierType.SHIFT_MASK) != 0;

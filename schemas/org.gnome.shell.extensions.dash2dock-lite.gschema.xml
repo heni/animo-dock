@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist gettext-domain="anino-dock">
-  <schema path="/org/gnome/shell/extensions/anino-dock/" id="org.gnome.shell.extensions.anino-dock">
+<schemalist gettext-domain="animo-dock">
+  <schema path="/org/gnome/shell/extensions/animo-dock/" id="org.gnome.shell.extensions.animo-dock">
     <key type="b" name="debug">
         <default>false</default>
         <summary>Debug Mode</summary>

@@ -4,16 +4,16 @@
      border: 2px solid magenta !important;
 }
 
-#aninoDock #dash * {
+#animoDock #dash * {
   margin: 0px !important;
   padding: 0px !important;
 }
 
-#aninoDock #dash .dash-item-container {
+#animoDock #dash .dash-item-container {
 /*  border: 2px solid red;*/
 }
 
-#aninoDockOverlay #panelLeft > StBin {
+#animoDockOverlay #panelLeft > StBin {
   /* border: 2px solid red; */
   margin-right: 10px;
 }
